@@ -1170,7 +1170,9 @@ function applyAdmin() {
   document.getElementById('fabTip').textContent = admin ? 'Ajouter une compétence' : 'Administration';
   var mcb = document.getElementById('manageCatsBtn');
   mcb.classList.toggle('on', admin);
+  document.getElementById('exportBtn').classList.toggle('on', admin);
   document.body.classList.toggle('admin-mode', admin);
+  setUnsynced(unsynced);
   renderAll();
   updateProjectCount();
 }
