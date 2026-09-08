@@ -1,0 +1,17 @@
+{
+  "categories": [
+    {"id": "marketing", "label": "Marketing", "emoji": "📊", "logo": ""},
+    {"id": "vente", "label": "Vente", "emoji": "💼", "logo": ""},
+    {"id": "communication", "label": "Communication", "emoji": "🗣️", "logo": ""},
+    {"id": "digital", "label": "Marketing Digital", "emoji": "📱", "logo": ""},
+    {"id": "ebusiness", "label": "E-Business & Entrepreneuriat", "emoji": "🚀", "logo": ""}
+  ],
+  "skills": [
+    {"id": 1, "cats": ["marketing"], "fav": false, "title": "Stratégie de marque", "resume": "Positionnement, identité visuelle et analyse concurrentielle.", "text": "Développement identité visuelle et positionnement stratégique. Analyse concurrentielle et définition des personas clients.", "media": []},
+    {"id": 2, "cats": ["marketing"], "fav": false, "title": "Analyse de marché", "resume": "Études quantitatives, SWOT et segmentation.", "text": "Études quantitatives et qualitatives, segmentation marché, analyse SWOT et plans marketing complets.", "media": []},
+    {"id": 3, "cats": ["vente"], "fav": false, "title": "Techniques de vente", "resume": "SPIN, SONCAS et cycle de vente complet.", "text": "Maîtrise des méthodes SPIN et SONCAS. Gestion du cycle de vente de la prospection à la fidélisation.", "media": []},
+    {"id": 4, "cats": ["communication"], "fav": false, "title": "Communication corporate", "resume": "Relations presse et supports de communication.", "text": "Rédaction de supports, relations presse, communication interne et externe.", "media": []},
+    {"id": 5, "cats": ["digital", "marketing"], "fav": true, "title": "SEO & SEM", "resume": "Google Ads, référencement et budgets digitaux.", "text": "Optimisation moteurs de recherche, campagnes Google Ads et gestion de budgets publicitaires.", "media": []},
+    {"id": 6, "cats": ["ebusiness"], "fav": false, "title": "Création d'entreprise", "resume": "Business plan, levée de fonds et lancement.", "text": "Business plan, étude de faisabilité, levée de fonds et accompagnement au lancement.", "media": []}
+  ]
+}
