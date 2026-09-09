@@ -1060,7 +1060,7 @@ function renderTabs() {
   bar.innerHTML = allTabs.map(function(c) {
     var logoEl = c.logo
       ? '<img class="tab-logo" src="' + c.logo + '" alt="">'
-      : '<span style="margin-right:5px">' + (c.emoji || '📁') + '</span>';
+      : (c.emoji ? '<span style="margin-right:5px">' + c.emoji + '</span>' : '');
     return '<button class="tab-btn' + (c.id === currentTab ? ' active' : '') + '" data-tab="' + c.id + '">' + logoEl + esc(c.label) + '</button>';
   }).join('');
 
@@ -1472,7 +1472,7 @@ function populateCatChips(selectedCats) {
     var sel = selectedCats && selectedCats.indexOf(c.id) !== -1;
     var logoEl = c.logo
       ? '<img class="cat-chip-logo" src="' + c.logo + '" alt="">'
-      : '<span>' + (c.emoji || '📁') + '</span>';
+      : (c.emoji ? '<span>' + c.emoji + '</span>' : '');
     return '<div class="cat-chip' + (sel ? ' selected' : '') + '" onclick="toggleChip(this,\'' + c.id + '\')">' +
       '<div class="cat-chip-check">' + (sel ? '✓' : '') + '</div>' +
       logoEl +
@@ -1617,7 +1617,7 @@ function renderCatList() {
   list.innerHTML = categories.map(function(c, i) {
     var logoHtml = (catDraftLogo[c.id] || c.logo)
       ? '<img src="' + (catDraftLogo[c.id] || c.logo) + '" alt="logo">'
-      : (c.emoji || '📁');
+      : (c.emoji || '');
     return '<div class="cat-row" draggable="true" data-idx="' + i + '">' +
       '<span class="cat-drag-handle">&#8597;</span>' +
       '<div class="cat-logo-wrap" title="Cliquer pour changer le logo" onclick="triggerLogoUpload(' + i + ')">' + logoHtml + '</div>' +
@@ -1699,7 +1699,7 @@ function deleteCatRow(idx) {
 
 document.getElementById('addCatBtn').addEventListener('click', function() {
   var newId = 'cat_' + Date.now();
-  categories.push({id: newId, label: 'Nouvelle catégorie', emoji: '📁', logo: ''});
+  categories.push({id: newId, label: 'Nouvelle catégorie', emoji: '', logo: ''});
   renderCatList();
   // focus last name input
   var inputs = document.querySelectorAll('#catList .cat-name-input');
