@@ -559,8 +559,8 @@ footer strong{color:var(--accent)}
       <div class="hero-badge">&#10022; &nbsp;Portfolio Professionnel&nbsp; &#10022;</div>
       <h1 class="hero-title">Anthony <em>LOBRY</em></h1>
       <p class="hero-desc">
-        Bienvenue sur mon Portfolio,<br>
-        d&eacute;couvrez mes comp&eacute;tences
+        &Eacute;tudiant passionn&eacute; de Marketing et de Communication.<br>
+        Je cr&eacute;e des exp&eacute;riences qui allient strat&eacute;gie, cr&eacute;ativit&eacute; et innovation.
       </p>
       <div class="hero-stats">
         <div>
@@ -691,6 +691,7 @@ footer strong{color:var(--accent)}
     <div class="pin-dots">
       <div class="dot" id="d0"></div><div class="dot" id="d1"></div>
       <div class="dot" id="d2"></div><div class="dot" id="d3"></div>
+      <div class="dot" id="d4"></div><div class="dot" id="d5"></div>
     </div>
     <div class="pin-err" id="pinErr"></div>
     <div class="pin-keys">
@@ -758,7 +759,14 @@ footer strong{color:var(--accent)}
 
 <script>
 // === CONFIG ===
-var PIN = '1234';
+// Le PIN n'est plus stocké en clair : seul son empreinte SHA-256 est présente ici.
+// Pour changer le code, il faut régénérer ce hash (jamais le PIN lui-même).
+var PIN_HASH = 'e6f18e083c226ae5ce4ef79bdfee7aee89cae92079880316f041716eee0eab05';
+var PIN_LEN = 6;
+async function sha256(str) {
+  var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+}
 
 // === CATEGORIES (dynamiques) ===
 var DEFAULT_CATS = [
@@ -1358,34 +1366,58 @@ var pinMod = document.getElementById('pinModal');
 document.getElementById('fabBtn').addEventListener('click', function() {
   if (admin) { openSkillModal(); } else { openPin(); }
 });
+function getLockUntil() { return parseInt(localStorage.getItem('portfolio_pin_lock') || '0', 10); }
+function getFailCount() { return parseInt(localStorage.getItem('portfolio_pin_fails') || '0', 10); }
 function openPin() {
   pin = ''; updateDots(); document.getElementById('pinErr').textContent = '';
+  var lockUntil = getLockUntil();
+  if (lockUntil > Date.now()) showLockMessage(lockUntil);
   pinMod.classList.add('open');
 }
 function closePin() { pinMod.classList.remove('open'); pin = ''; updateDots(); }
+function showLockMessage(lockUntil) {
+  var secs = Math.ceil((lockUntil - Date.now()) / 1000);
+  document.getElementById('pinErr').textContent = 'Trop de tentatives — réessayez dans ' + secs + 's.';
+}
 document.querySelector('.pin-keys').addEventListener('click', function(e) {
   var k = e.target.closest('.pkey'); if (!k) return;
   var v = k.dataset.v;
   if (v === 'cancel') { closePin(); return; }
+  var lockUntil = getLockUntil();
+  if (lockUntil > Date.now()) { showLockMessage(lockUntil); return; }
   if (v === 'del') { pin = pin.slice(0, -1); updateDots(); return; }
-  if (pin.length >= 4) return;
+  if (pin.length >= PIN_LEN) return;
   pin += v; updateDots();
-  if (pin.length === 4) setTimeout(checkPin, 180);
+  if (pin.length === PIN_LEN) setTimeout(checkPin, 180);
 });
 function updateDots() {
-  for (var i = 0; i < 4; i++) {
+  for (var i = 0; i < PIN_LEN; i++) {
     document.getElementById('d' + i).className = 'dot' + (i < pin.length ? ' on' : '');
   }
 }
-function checkPin() {
-  if (pin === PIN) {
+async function checkPin() {
+  var hash = await sha256(pin);
+  if (hash === PIN_HASH) {
+    localStorage.removeItem('portfolio_pin_fails');
+    localStorage.removeItem('portfolio_pin_lock');
     admin = true; closePin(); applyAdmin();
     showToast('🔓 Mode administration activé');
     setTimeout(openSkillModal, 350);
   } else {
-    for (var i = 0; i < 4; i++) document.getElementById('d' + i).className = 'dot err';
-    document.getElementById('pinErr').textContent = 'Code incorrect, réessayez.';
-    setTimeout(function() { pin = ''; updateDots(); document.getElementById('pinErr').textContent = ''; }, 950);
+    var fails = getFailCount() + 1;
+    localStorage.setItem('portfolio_pin_fails', String(fails));
+    for (var i = 0; i < PIN_LEN; i++) document.getElementById('d' + i).className = 'dot err';
+    if (fails >= 5) {
+      // blocage progressif : 30s, puis 60s, 120s... (plafonné à 10 min)
+      var waitSec = Math.min(30 * Math.pow(2, fails - 5), 600);
+      var lockUntil = Date.now() + waitSec * 1000;
+      localStorage.setItem('portfolio_pin_lock', String(lockUntil));
+      showLockMessage(lockUntil);
+      pin = ''; updateDots();
+    } else {
+      document.getElementById('pinErr').textContent = 'Code incorrect, réessayez.';
+      setTimeout(function() { pin = ''; updateDots(); document.getElementById('pinErr').textContent = ''; }, 950);
+    }
   }
 }
 
