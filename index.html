@@ -638,7 +638,6 @@ footer strong{color:var(--accent)}
 
 <footer>
   <p><strong>Anthony LOBRY</strong> &nbsp;&middot;&nbsp; 2026</p>
-  <p><strong>Contact</strong> &nbsp;&middot;&nbsp; 07 82 03 71 05 &nbsp;&middot;&nbsp; <a href="mailto:anth59227@gmail.com"><p>anth59227@gmail.com</p></a> </p>
 
 </footer>
 
@@ -1013,11 +1012,11 @@ document.getElementById('contactForm').addEventListener('submit', function(e) {
       statusEl.className = 'contact-status ok';
       document.getElementById('contactForm').reset();
     } else {
-      statusEl.textContent = "❌ L'envoi a échoué — réessayez ou écrivez directement à anth59227@gmail.com";
+      statusEl.textContent = "❌ L'envoi a échoué — réessayez ou contactez moi sur LinkedIn";
       statusEl.className = 'contact-status err';
     }
   }).catch(function() {
-    statusEl.textContent = "❌ Erreur réseau — réessayez ou écrivez directement à anth59227@gmail.com";
+    statusEl.textContent = "❌ Erreur réseau — réessayez ou contactez moi sur LinkedIn";
     statusEl.className = 'contact-status err';
   }).finally(function() {
     btn.disabled = false;
