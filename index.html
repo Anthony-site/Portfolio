@@ -134,6 +134,15 @@ nav{
   margin-bottom:32px;opacity:0;animation:fadeup .8s .55s forwards;
 }
 .hero-stats{display:flex;gap:32px;flex-wrap:wrap;opacity:0;animation:fadeup .8s .7s forwards}
+.hero-cta{opacity:0;animation:fadeup .8s .5s forwards}
+.btn-cv{
+  display:inline-flex;align-items:center;gap:9px;
+  padding:13px 26px;border-radius:100px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff;text-decoration:none;font-weight:600;font-size:.9rem;
+  box-shadow:var(--shadow);transition:all var(--tr);margin-bottom:20px;
+}
+.btn-cv:hover{transform:translateY(-2px);filter:brightness(1.08)}
 .stat-num{font-family:"Playfair Display",serif;font-size:2.2rem;font-weight:700;color:var(--accent)}
 .stat-label{font-size:.72rem;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase}
 .stat-sub{font-size:.68rem;color:var(--accent2);margin-top:2px}
@@ -562,6 +571,12 @@ footer strong{color:var(--accent)}
         &Eacute;tudiant passionn&eacute; de Marketing et de Communication.<br>
         Je cr&eacute;e des exp&eacute;riences qui allient strat&eacute;gie, cr&eacute;ativit&eacute; et innovation.
       </p>
+      <div class="hero-cta">
+        <a class="btn-cv" href="CV_LOBRY_Anthony.pdf" download="CV_Anthony_LOBRY.pdf">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 11l5 5 5-5"/><path d="M4 21h16"/></svg>
+          T&eacute;l&eacute;charger mon CV
+        </a>
+      </div>
       <div class="hero-stats">
         <div>
           <div class="stat-num" id="cntDomaines">5</div>
