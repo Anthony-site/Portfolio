@@ -429,6 +429,13 @@ body.admin-mode .skill-mini{cursor:default}
   backdrop-filter:blur(6px);transition:background .2s;white-space:nowrap;
 }
 .popup-media-btn:hover{background:rgba(200,169,110,0.7);border-color:var(--accent)}
+.popup-pdf-card{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  padding:60px 20px;background:var(--surface2);color:var(--text-muted);font-size:.9rem;
+}
+.popup-pdf-icon{font-size:3rem}
+.popup-pdf-hint{font-size:.78rem;opacity:.8}
+.media-pdf-thumb{font-size:2rem}
 .popup-media-label{
   position:absolute;bottom:10px;left:12px;
   background:rgba(0,0,0,0.55);border-radius:6px;padding:3px 10px;
@@ -521,6 +528,8 @@ body.admin-mode .skill-mini{cursor:default}
 .dropz-txt span{color:var(--accent);cursor:pointer}
 .prev-grid{display:flex;flex-wrap:wrap;gap:9px;margin-top:12px}
 .prev-item{width:72px;height:72px;border-radius:9px;overflow:hidden;position:relative;background:var(--surface2)}
+.prev-pdf{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:1.4rem;gap:2px;color:var(--text-muted)}
+.prev-pdf span{font-size:.55rem;max-width:64px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .prev-item img,.prev-item video{width:100%;height:100%;object-fit:cover;border-radius:0}
 .prev-rm{position:absolute;top:2px;right:2px;width:19px;height:19px;background:rgba(0,0,0,0.7);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.6rem;cursor:pointer;color:#fff;border:none}
 .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:22px}
@@ -812,7 +821,7 @@ footer strong{color:var(--accent)}
       <div class="dropz" id="dropz">
         <div class="dropz-icon">&#128193;</div>
         <div class="dropz-txt">Glissez vos fichiers ici ou <span id="browseBtn">parcourez</span></div>
-        <input type="file" id="fileIn" multiple accept="image/*,video/*" style="display:none">
+        <input type="file" id="fileIn" multiple accept="image/*,video/*,application/pdf" style="display:none">
       </div>
       <div class="prev-grid" id="prevGrid"></div>
     </div>
@@ -1300,9 +1309,12 @@ function renderGrid(cat) {
     var cats = s.cats || (s.cat ? [s.cat] : []);
     var thumb = '';
     if (s.media && s.media.length) {
-      thumb = s.media[0].type === 'video'
-        ? '<video src="' + s.media[0].url + '" muted loop playsinline></video>'
-        : '<img src="' + s.media[0].url + '" alt="' + esc(s.title) + '" loading="lazy">';
+      var m0 = s.media[0];
+      thumb = m0.type === 'video'
+        ? '<video src="' + m0.url + '" muted loop playsinline></video>'
+        : m0.type === 'pdf'
+        ? '<div class="mini-placeholder media-pdf-thumb">📄</div>'
+        : '<img src="' + m0.url + '" alt="' + esc(s.title) + '" loading="lazy">';
     } else {
       thumb = '<div class="mini-placeholder">🎯</div>';
     }
@@ -1450,10 +1462,12 @@ function openPopup(id) {
   var ml = document.getElementById('popupMediaList');
   if (s.media && s.media.length) {
     ml.innerHTML = s.media.map(function(m, i) {
-      var ext = m.type === 'video' ? 'mp4' : 'jpg';
+      var ext = m.type === 'video' ? 'mp4' : m.type === 'pdf' ? 'pdf' : 'jpg';
       var filename = esc(s.title).replace(/\s+/g, '_') + '_' + (i + 1) + '.' + ext;
       var mediaEl = m.type === 'video'
         ? '<video src="' + m.url + '" controls muted style="width:100%;display:block;border-radius:0;max-height:520px;background:#000"></video>'
+        : m.type === 'pdf'
+        ? '<div class="popup-pdf-card"><div class="popup-pdf-icon">📄</div><div>Document PDF</div><div class="popup-pdf-hint">Utilise "Ouvrir" pour le consulter</div></div>'
         : '<img src="' + m.url + '" alt="' + esc(s.title) + ' ' + (i+1) + '" style="width:100%;display:block;border-radius:0;max-height:520px;object-fit:contain;background:var(--surface2)">';
       var label = s.media.length > 1 ? '<div class="popup-media-label">' + (i+1) + ' / ' + s.media.length + '</div>' : '';
       return '<div class="popup-media-item">' +
@@ -1654,7 +1668,7 @@ function editSkill(e, id) {
   var s = skills.find(function(x) { return x.id === id; });
   if (!s) return;
   editId = id;
-  media = (s.media || []).map(function(m) { return {url: m.url, type: m.type}; });
+  media = (s.media || []).map(function(m) { return {url: m.url, type: m.type, name: m.name}; });
   document.getElementById('skillModalTitle').textContent = 'Modifier la compétence';
   document.getElementById('skillModalSub').textContent = 'Modifiez les informations.';
   document.getElementById('fTitle').value = s.title;
@@ -1684,7 +1698,7 @@ document.getElementById('saveSkill').addEventListener('click', function() {
   var cats   = getSelectedCats();
   if (!title) { document.getElementById('fTitle').focus(); showToast('Saisissez un titre'); return; }
   if (!cats.length) { showToast('Sélectionnez au moins une catégorie'); return; }
-  var md = media.map(function(m) { return {url: m.url, type: m.type}; });
+  var md = media.map(function(m) { return {url: m.url, type: m.type, name: m.name}; });
 
   if (editId) {
     var s = skills.find(function(x) { return x.id === editId; });
@@ -1742,12 +1756,25 @@ function compressImage(file, maxDim, quality) {
 
 function handleFiles(files) {
   Array.from(files).forEach(function(f) {
-    if (!f.type.startsWith('image/') && !f.type.startsWith('video/')) return;
-    if (f.type.startsWith('image/')) {
+    var isImage = f.type.startsWith('image/');
+    var isVideo = f.type.startsWith('video/');
+    var isPdf = f.type === 'application/pdf';
+    if (!isImage && !isVideo && !isPdf) return;
+    if (isImage) {
       compressImage(f, 1600, 0.8).then(function(dataUrl) {
         media.push({url: dataUrl, type: 'image'});
         renderPrev();
       });
+    } else if (isPdf) {
+      if (f.size > 8 * 1024 * 1024) {
+        showToast('⚠️ PDF volumineux (' + Math.round(f.size / 1024 / 1024) + ' Mo) — ça va alourdir data.json, pense à le compresser si possible');
+      }
+      var rp = new FileReader();
+      rp.onload = function(ev) {
+        media.push({url: ev.target.result, type: 'pdf', name: f.name});
+        renderPrev();
+      };
+      rp.readAsDataURL(f);
     } else {
       if (f.size > 8 * 1024 * 1024) {
         showToast('⚠️ Vidéo volumineuse (' + Math.round(f.size / 1024 / 1024) + ' Mo) — pense à l\'héberger ailleurs (YouTube) plutôt que de l\'ajouter directement');
@@ -1764,7 +1791,9 @@ function handleFiles(files) {
 
 function renderPrev() {
   document.getElementById('prevGrid').innerHTML = media.map(function(m, i) {
-    var el = m.type === 'video' ? '<video src="' + m.url + '" muted></video>' : '<img src="' + m.url + '">';
+    var el = m.type === 'video' ? '<video src="' + m.url + '" muted></video>'
+      : m.type === 'pdf' ? '<div class="prev-pdf">📄<span>' + esc(m.name || 'PDF') + '</span></div>'
+      : '<img src="' + m.url + '">';
     return '<div class="prev-item">' + el + '<button class="prev-rm" onclick="rmMedia(' + i + ')">✕</button></div>';
   }).join('');
 }
