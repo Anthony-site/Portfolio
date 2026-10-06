@@ -425,7 +425,7 @@ body.admin-mode .skill-mini{cursor:default}
 .popup-media-btn{
   background:rgba(0,0,0,0.65);border:1px solid rgba(255,255,255,0.18);
   color:#fff;border-radius:8px;padding:6px 12px;font-size:.75rem;font-weight:600;
-  cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:5px;
+  font-family:inherit;cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:5px;
   backdrop-filter:blur(6px);transition:background .2s;white-space:nowrap;
 }
 .popup-media-btn:hover{background:rgba(200,169,110,0.7);border-color:var(--accent)}
@@ -1431,6 +1431,19 @@ document.getElementById('popupClose').addEventListener('click', function() { pop
 popOv.addEventListener('click', function(e) { if (e.target === popOv) popOv.classList.remove('open'); });
 document.addEventListener('keydown', function(e) { if (e.key === 'Escape') popOv.classList.remove('open'); });
 
+// Convertit un data: URL (base64) en vrai fichier binaire (Blob) — beaucoup
+// plus fiable que d'ouvrir/télécharger un lien data: direct pour un gros fichier
+function dataURLtoBlob(dataurl) {
+  var parts = dataurl.split(',');
+  var mimeMatch = parts[0].match(/:(.*?);/);
+  var mime = mimeMatch ? mimeMatch[1] : 'application/octet-stream';
+  var bstr = atob(parts[1]);
+  var n = bstr.length;
+  var u8arr = new Uint8Array(n);
+  while (n--) { u8arr[n] = bstr.charCodeAt(n); }
+  return new Blob([u8arr], {type: mime});
+}
+
 function openPopup(id) {
   var s = skills.find(function(x) { return x.id === id; });
   if (!s) return;
@@ -1446,13 +1459,32 @@ function openPopup(id) {
       return '<div class="popup-media-item">' +
         mediaEl +
         '<div class="popup-media-actions">' +
-          '<a class="popup-media-btn" href="' + m.url + '" target="_blank" rel="noopener">&#128065; Ouvrir</a>' +
-          '<a class="popup-media-btn" href="' + m.url + '" download="' + filename + '">&#11015; T&eacute;l&eacute;charger</a>' +
+          '<button type="button" class="popup-media-btn popup-open-btn" data-idx="' + i + '">&#128065; Ouvrir</button>' +
+          '<button type="button" class="popup-media-btn popup-dl-btn" data-idx="' + i + '" data-filename="' + filename + '">&#11015; T&eacute;l&eacute;charger</button>' +
         '</div>' +
         label +
         '</div>';
     }).join('');
     ml.style.display = 'flex';
+    // Ouvrir/Télécharger via Blob plutôt qu'un lien data: direct — bien plus fiable
+    // pour les photos/vidéos volumineuses (Chrome peut rester en page blanche sinon).
+    ml.onclick = function(e) {
+      var openBtn = e.target.closest('.popup-open-btn');
+      var dlBtn = e.target.closest('.popup-dl-btn');
+      if (!openBtn && !dlBtn) return;
+      var idx = parseInt((openBtn || dlBtn).dataset.idx, 10);
+      var item = s.media[idx];
+      if (!item) return;
+      var blobUrl = URL.createObjectURL(dataURLtoBlob(item.url));
+      if (openBtn) {
+        window.open(blobUrl, '_blank');
+      } else {
+        var a = document.createElement('a');
+        a.href = blobUrl; a.download = dlBtn.dataset.filename;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      }
+      setTimeout(function() { URL.revokeObjectURL(blobUrl); }, 60000);
+    };
   } else {
     ml.innerHTML = '<div style="text-align:center;padding:40px 0;font-size:3rem;color:var(--text-muted)">🎯</div>';
     ml.style.display = 'flex';
